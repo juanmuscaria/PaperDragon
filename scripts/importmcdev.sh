@@ -16,14 +16,6 @@ nms="net/minecraft/server"
 export MODLOG=""
 cd $basedir
 
-function containsElement {
-    local e
-    for e in "${@:2}"; do
-        [[ "$e" == "$1" ]] && return 0;
-    done
-    return 1
-}
-
 export importedmcdev=""
 function import {
     if [ -f "$basedir/Paper/Paper-Server/src/main/java/net/minecraft/server/$1.java" ]; then
@@ -42,6 +34,26 @@ function import {
     else
         echo "$(bashColor 1 33) UN-NEEDED IMPORT STATEMENT:$(bashColor 1 34) $file $(bashColorReset)"
     fi
+}
+
+function importLibrary {
+    group=$1
+    lib=$2
+    prefix=$3
+    shift 3
+    for file in "$@"; do
+        file="$prefix/$file"
+        target="$basedir/Paper/Paper-Server/src/main/java/${file}"
+        targetdir=$(dirname "$target")
+        mkdir -p "${targetdir}"
+        base="$workdir/Minecraft/$minecraftversion/libraries/${group}/${lib}/$file"
+        if [ ! -f "$base" ]; then
+            echo "Missing $base"
+            exit 1
+        fi
+        export MODLOG="$MODLOG  Imported $file from $lib\n";
+        sed 's/\r$//' "$base" > "$target" || exit 1
+    done
 }
 
 (
